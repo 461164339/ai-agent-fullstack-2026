@@ -2,6 +2,7 @@ import { HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { Annotation, END, START, StateGraph } from '@langchain/langgraph';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import type { AgentStreamEvent, ChatSource } from '@ai-agent/shared';
 
 import { Env } from '../config/env.validation';
 import { OllamaService } from '../ollama/ollama.service';
@@ -10,44 +11,7 @@ import { RetrievedChunk } from '../rag/rag.types';
 import { ChatPersistenceService } from './chat-persistence.service';
 import { ChatAttachmentDto, ChatDto } from './dto/chat.dto';
 
-type ChatSource = {
-  documentId: string;
-  chunkId: string;
-  title: string | null;
-  source: string | null;
-  chunkIndex: number;
-  score: number;
-};
-
-export type AgentStreamEvent =
-  | {
-      type: 'session';
-      sessionId: string;
-      runId: string;
-      userMessageId: string;
-    }
-  | {
-      type: 'status';
-      stage: 'retrieving' | 'generating';
-      message: string;
-    }
-  | {
-      type: 'sources';
-      sources: ChatSource[];
-    }
-  | {
-      type: 'token';
-      content: string;
-    }
-  | {
-      type: 'done';
-      answer: string;
-      sources: ChatSource[];
-      sessionId?: string;
-      runId?: string;
-      userMessageId?: string;
-      assistantMessageId?: string;
-    };
+export type { AgentStreamEvent } from '@ai-agent/shared';
 
 const AgentState = Annotation.Root({
   question: Annotation<string>(),

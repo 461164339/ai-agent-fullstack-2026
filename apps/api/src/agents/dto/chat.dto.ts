@@ -1,4 +1,10 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  CHAT_ATTACHMENT_KINDS,
+  CHAT_LIMITS,
+  type ChatAttachmentPayload,
+  type ChatRequestPayload,
+} from '@ai-agent/shared';
 import { Type } from 'class-transformer';
 import {
   ArrayMaxSize,
@@ -16,13 +22,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 
-export const MAX_CHAT_ATTACHMENTS = 6;
-export const MAX_CHAT_ATTACHMENT_SIZE = 4 * 1024 * 1024;
-export const MAX_CHAT_ATTACHMENT_TEXT_LENGTH = 200_000;
-export const MAX_CHAT_ATTACHMENT_DATA_URL_LENGTH = 6_000_000;
-export const MAX_CHAT_MESSAGE_LENGTH = 20_000;
-
-export class ChatAttachmentDto {
+export class ChatAttachmentDto implements ChatAttachmentPayload {
   @ApiProperty({
     example: 'notes.md',
   })
@@ -39,11 +39,11 @@ export class ChatAttachmentDto {
   mimeType!: string;
 
   @ApiProperty({
-    enum: ['text', 'image', 'file'],
+    enum: CHAT_ATTACHMENT_KINDS,
     example: 'text',
   })
-  @IsIn(['text', 'image', 'file'])
-  kind!: 'text' | 'image' | 'file';
+  @IsIn(CHAT_ATTACHMENT_KINDS)
+  kind!: ChatAttachmentPayload['kind'];
 
   @ApiProperty({
     example: 1024,
@@ -51,7 +51,7 @@ export class ChatAttachmentDto {
   @Type(() => Number)
   @IsNumber()
   @Min(0)
-  @Max(MAX_CHAT_ATTACHMENT_SIZE)
+  @Max(CHAT_LIMITS.maxAttachmentSize)
   size!: number;
 
   @ApiPropertyOptional({
@@ -60,7 +60,7 @@ export class ChatAttachmentDto {
   })
   @IsOptional()
   @IsString()
-  @MaxLength(MAX_CHAT_ATTACHMENT_TEXT_LENGTH)
+  @MaxLength(CHAT_LIMITS.maxAttachmentTextLength)
   content?: string;
 
   @ApiPropertyOptional({
@@ -68,11 +68,11 @@ export class ChatAttachmentDto {
   })
   @IsOptional()
   @IsString()
-  @MaxLength(MAX_CHAT_ATTACHMENT_DATA_URL_LENGTH)
+  @MaxLength(CHAT_LIMITS.maxAttachmentDataUrlLength)
   dataUrl?: string;
 }
 
-export class ChatRequestDto {
+export class ChatRequestDto implements ChatRequestPayload {
   @ApiPropertyOptional({
     description: 'Existing chat session id. Omit to create a new session.',
     format: 'uuid',
@@ -87,7 +87,7 @@ export class ChatRequestDto {
   @IsOptional()
   @IsString()
   @MinLength(1)
-  @MaxLength(MAX_CHAT_MESSAGE_LENGTH)
+  @MaxLength(CHAT_LIMITS.maxMessageLength)
   message?: string;
 
   @ApiPropertyOptional({
@@ -98,8 +98,8 @@ export class ChatRequestDto {
   @IsOptional()
   @Type(() => Number)
   @IsInt()
-  @Min(1)
-  @Max(20)
+  @Min(CHAT_LIMITS.minTopK)
+  @Max(CHAT_LIMITS.maxTopK)
   topK?: number;
 
   @ApiPropertyOptional({
@@ -109,7 +109,7 @@ export class ChatRequestDto {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => ChatAttachmentDto)
-  @ArrayMaxSize(MAX_CHAT_ATTACHMENTS)
+  @ArrayMaxSize(CHAT_LIMITS.maxAttachments)
   attachments?: ChatAttachmentDto[];
 }
 

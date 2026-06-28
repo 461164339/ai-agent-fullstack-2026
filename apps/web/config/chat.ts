@@ -1,26 +1,13 @@
+import { CHAT_LIMITS, TEXT_ATTACHMENT_EXTENSIONS } from '@ai-agent/shared';
+
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:3000/api';
 
-export const MAX_ATTACHMENTS = 6;
-export const MAX_FILE_SIZE = 4 * 1024 * 1024;
-export const MAX_TEXT_CHARS = 200_000;
+export const MAX_ATTACHMENTS = CHAT_LIMITS.maxAttachments;
+export const MAX_FILE_SIZE = CHAT_LIMITS.maxAttachmentSize;
+export const MAX_TEXT_CHARS = CHAT_LIMITS.maxAttachmentTextLength;
 
-export const TEXT_EXTENSIONS = new Set([
-  'csv',
-  'css',
-  'html',
-  'js',
-  'jsx',
-  'json',
-  'md',
-  'sql',
-  'ts',
-  'tsx',
-  'txt',
-  'xml',
-  'yaml',
-  'yml',
-]);
+export const TEXT_EXTENSIONS = new Set<string>(TEXT_ATTACHMENT_EXTENSIONS);
 
 export const STARTER_PROMPTS = [
   '帮我解释一下这个项目的 RAG 模块怎么拆分。',

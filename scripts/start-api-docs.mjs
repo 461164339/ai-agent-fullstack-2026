@@ -12,6 +12,8 @@ if (await isReachable(docsUrl)) {
 }
 
 const pnpmCommand = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
+await runCommand(pnpmCommand, ['--filter', '@ai-agent/shared', 'build']);
+
 const api = spawn(
   pnpmCommand,
   ['--filter', '@ai-agent/api', 'start:dev'],
@@ -79,6 +81,26 @@ function openChrome(url) {
   });
 
   child.unref();
+}
+
+function runCommand(command, args) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, args, {
+      cwd: projectRoot,
+      env: process.env,
+      stdio: 'inherit',
+    });
+
+    child.on('error', reject);
+    child.on('exit', (code) => {
+      if (code === 0) {
+        resolve();
+        return;
+      }
+
+      reject(new Error(`${command} ${args.join(' ')} exited with ${code}`));
+    });
+  });
 }
 
 function getChromeOpener(url) {

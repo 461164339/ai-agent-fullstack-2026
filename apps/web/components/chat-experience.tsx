@@ -1,6 +1,11 @@
 'use client';
 
 import {
+  type AgentStreamPayload,
+  type ChatAttachmentPayload,
+  type ChatSource,
+} from '@ai-agent/shared';
+import {
   Bot,
   Check,
   ChevronDown,
@@ -39,25 +44,8 @@ import {
 } from '@/config/chat';
 import { readSseStream } from '@/lib/sse';
 
-type Source = {
-  documentId: string;
-  chunkId: string;
-  title: string | null;
-  source: string | null;
-  chunkIndex: number;
-  score: number;
-};
-
-type AttachmentKind = 'text' | 'image' | 'file';
-
-type ChatAttachment = {
+type ChatAttachment = ChatAttachmentPayload & {
   id: string;
-  name: string;
-  mimeType: string;
-  kind: AttachmentKind;
-  size: number;
-  content?: string;
-  dataUrl?: string;
 };
 
 type ChatMessage = {
@@ -65,43 +53,10 @@ type ChatMessage = {
   role: 'user' | 'assistant';
   content: string;
   attachments?: ChatAttachment[];
-  sources?: Source[];
+  sources?: ChatSource[];
 };
 
-type StreamPayload =
-  | {
-      type: 'session';
-      sessionId: string;
-      runId: string;
-      userMessageId: string;
-    }
-  | {
-      type: 'status';
-      stage: 'retrieving' | 'generating';
-      message: string;
-    }
-  | {
-      type: 'sources';
-      sources: Source[];
-    }
-  | {
-      type: 'token';
-      content: string;
-    }
-  | {
-      type: 'done';
-      answer: string;
-      assistantMessageId?: string;
-      runId?: string;
-      sessionId?: string;
-      sources: Source[];
-      userMessageId?: string;
-    }
-  | {
-      type: 'error';
-      message: string;
-      retryable?: boolean;
-    };
+type StreamPayload = AgentStreamPayload;
 
 type ApiErrorBody = {
   message?: unknown;
@@ -833,7 +788,7 @@ async function readAttachment(file: File): Promise<ChatAttachment> {
   return attachment;
 }
 
-function getAttachmentKind(file: File): AttachmentKind {
+function getAttachmentKind(file: File): ChatAttachmentPayload['kind'] {
   if (file.type.startsWith('image/')) {
     return 'image';
   }

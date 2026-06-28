@@ -1,0 +1,24 @@
+{
+  "name": "@ai-agent/shared",
+  "version": "0.0.1",
+  "description": "Shared contracts and constants for the AI Agent workspace.",
+  "private": true,
+  "license": "UNLICENSED",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -w -p tsconfig.json",
+    "lint": "tsc --noEmit -p tsconfig.json",
+    "test": "echo \"No shared tests configured\""
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  }
+}

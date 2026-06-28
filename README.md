@@ -4,6 +4,7 @@
 
 - `apps/api`: NestJS 后端，负责 RAG、LangGraph Agent 编排、Ollama 调用、SSE 流式输出和聊天落库。
 - `apps/web`: Next.js 前端，提供类 ChatGPT 的流式聊天界面，支持文本、图片粘贴、拖拽上传和文件附件。
+- `packages/shared`: 前后端共用的聊天限制常量、附件 payload、SSE event type 和 RAG source type。
 
 ## 快速启动
 
@@ -70,6 +71,10 @@ http://localhost:3000/api/docs
 │     ├─ components              # 聊天主界面
 │     ├─ config                  # 前端运行配置
 │     └─ lib                     # SSE 流解析
+├─ packages
+│  └─ shared                     # 前后端共用类型和常量
+├─ .github
+│  └─ workflows                  # CI: lint/test/build
 ├─ scripts                       # 本地开发辅助脚本
 ├─ docker-compose.yml
 ├─ pnpm-workspace.yaml
@@ -134,6 +139,42 @@ apps/web/.env.local
 - `OllamaModule`: 封装本地/云端 Ollama 模型、embedding 模型、vision 模型。
 - `DatabaseModule`: Prisma 连接和生命周期管理。
 - `ConfigModule`: 使用 Zod 校验环境变量，避免服务启动后才发现配置错误。
+
+## Shared 包
+
+`packages/shared` 是 monorepo 里的契约层，当前沉淀了：
+
+- `CHAT_LIMITS`: 消息长度、附件数量、附件大小、topK 范围。
+- `CHAT_ATTACHMENT_KINDS`: `text`、`image`、`file`。
+- `TEXT_ATTACHMENT_EXTENSIONS`: 前端可直接读取文本内容的扩展名白名单。
+- `ChatAttachmentPayload`、`ChatRequestPayload`: 前后端共用请求 payload。
+- `AgentStreamEvent`、`AgentStreamPayload`: SSE 事件协议。
+- `ChatSource`: RAG sources 快照类型。
+
+API 的 DTO 和 Web 的聊天组件都引用这个包，避免前后端各自维护一份限制和事件类型。
+
+## CI
+
+已接入 GitHub Actions：
+
+```text
+.github/workflows/ci.yml
+```
+
+触发条件：
+
+- push 到 `main`
+- pull request
+
+执行内容：
+
+```bash
+pnpm install --frozen-lockfile
+pnpm prisma:generate
+pnpm lint
+pnpm test
+pnpm build
+```
 
 主要 API：
 
@@ -256,14 +297,14 @@ curl.exe -X POST http://localhost:3000/api/rag/documents ^
 - SSE 接口关闭压缩，避免代理或压缩中间件影响流式输出。
 - 数据库写入采用 best-effort 策略，数据库不可用时不阻断模型回答。
 - 前端把聊天配置从组件抽到 `config/chat.ts`，组件更专注交互状态和渲染。
+- 抽出 `packages/shared`，统一前后端聊天限制、附件 payload、SSE event 和 RAG source 类型。
+- 增加 GitHub Actions CI，在 push/PR 时执行 Prisma generate、lint、test 和 build。
 - 根目录 `.log`、构建产物、缓存、依赖目录均由 `.gitignore` 忽略，开发产生的日志文件不进入代码仓库。
 
 ## 后续可优化方向
 
-- 抽出 `packages/shared`：沉淀前后端共用的 DTO type、SSE event type、附件限制常量。
 - RAG 改用 pgvector：将 `DocumentChunk.embedding` 改成 vector 类型，并增加 ivfflat/hnsw 索引。
 - 附件存储上对象存储：数据库只保存 `storageUri`、hash、metadata 和文本抽取结果。
 - 增加鉴权和用户体系：将 `ChatSession`、`Document` 和 API 调用绑定到 user/project。
 - 增加队列：大文档切块、embedding、图片 OCR 等任务放入后台队列。
 - 增加结构化日志和 tracing：生产环境接入 OpenTelemetry、请求 id、模型耗时统计。
-- 增加 CI：在 GitHub Actions 中执行 `pnpm lint`、`pnpm test`、`pnpm build`。
