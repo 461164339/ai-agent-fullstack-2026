@@ -1,0 +1,131 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Document {
+  id        String          @id @default(uuid()) @db.Uuid
+  title     String?
+  source    String?
+  content   String
+  metadata  Json?
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  chunks    DocumentChunk[]
+}
+
+model DocumentChunk {
+  id         String   @id @default(uuid()) @db.Uuid
+  documentId String   @db.Uuid
+  content    String
+  chunkIndex Int
+  metadata   Json?
+  embedding  Json
+  createdAt  DateTime @default(now())
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@unique([documentId, chunkIndex])
+  @@index([documentId])
+}
+
+model ChatSession {
+  id        String        @id @default(uuid()) @db.Uuid
+  title     String?
+  status    String        @default("active")
+  metadata  Json?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  messages  ChatMessage[]
+  runs      ChatRun[]
+
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model ChatMessage {
+  id             String           @id @default(uuid()) @db.Uuid
+  sessionId      String           @db.Uuid
+  role           String
+  content        String           @db.Text
+  status         String           @default("completed")
+  model          String?
+  error          String?          @db.Text
+  metadata       Json?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  session        ChatSession      @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  attachments    ChatAttachment[]
+  sources        ChatSource[]
+  userRuns       ChatRun[]        @relation("RunUserMessage")
+  assistantRuns  ChatRun[]        @relation("RunAssistantMessage")
+
+  @@index([sessionId, createdAt])
+  @@index([role])
+}
+
+model ChatAttachment {
+  id          String      @id @default(uuid()) @db.Uuid
+  messageId   String      @db.Uuid
+  name        String
+  mimeType    String
+  kind        String
+  size        Int
+  sha256      String?
+  content     String?     @db.Text
+  dataUrl     String?     @db.Text
+  storageUri  String?
+  metadata    Json?
+  createdAt   DateTime    @default(now())
+  message     ChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
+  @@index([kind])
+  @@index([sha256])
+}
+
+model ChatRun {
+  id                 String       @id @default(uuid()) @db.Uuid
+  sessionId          String       @db.Uuid
+  userMessageId      String       @db.Uuid
+  assistantMessageId String?      @db.Uuid
+  provider           String       @default("ollama")
+  model              String?
+  status             String       @default("running")
+  topK               Int
+  startedAt          DateTime     @default(now())
+  completedAt        DateTime?
+  latencyMs          Int?
+  error              String?      @db.Text
+  metadata           Json?
+  session            ChatSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  userMessage        ChatMessage  @relation("RunUserMessage", fields: [userMessageId], references: [id], onDelete: Cascade)
+  assistantMessage   ChatMessage? @relation("RunAssistantMessage", fields: [assistantMessageId], references: [id], onDelete: SetNull)
+
+  @@index([sessionId, startedAt])
+  @@index([userMessageId])
+  @@index([assistantMessageId])
+  @@index([status])
+}
+
+model ChatSource {
+  id          String      @id @default(uuid()) @db.Uuid
+  messageId   String      @db.Uuid
+  documentId  String?     @db.Uuid
+  chunkId     String?     @db.Uuid
+  title       String?
+  source      String?
+  chunkIndex  Int
+  score       Float
+  metadata    Json?
+  createdAt   DateTime    @default(now())
+  message     ChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
+  @@index([documentId])
+  @@index([chunkId])
+}

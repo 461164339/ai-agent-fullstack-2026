@@ -1,0 +1,35 @@
+{
+  "name": "ai-agent-turborepo",
+  "version": "0.0.1",
+  "description": "Turborepo workspace with a NestJS AI agent API and a Next.js chat frontend.",
+  "private": true,
+  "license": "UNLICENSED",
+  "packageManager": "pnpm@10.28.2",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "test": "turbo test",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,css}\"",
+    "api:dev": "pnpm --filter @ai-agent/api start:dev",
+    "api:build": "pnpm --filter @ai-agent/api build",
+    "api:test": "pnpm --filter @ai-agent/api test",
+    "web:dev": "pnpm --filter @ai-agent/web dev",
+    "web:build": "pnpm --filter @ai-agent/web build",
+    "db:up": "docker compose up -d postgres",
+    "db:down": "docker compose down",
+    "db:logs": "docker compose logs -f postgres",
+    "ollama:up": "docker compose --profile ollama up -d ollama",
+    "ollama:pull:chat": "ollama pull llama3.1:8b",
+    "ollama:pull:vision": "ollama pull qwen2.5vl:3b",
+    "ollama:pull:embed": "ollama pull nomic-embed-text",
+    "prisma:generate": "pnpm --filter @ai-agent/api prisma:generate",
+    "prisma:migrate": "pnpm --filter @ai-agent/api prisma:migrate",
+    "prisma:deploy": "pnpm --filter @ai-agent/api prisma:deploy",
+    "prisma:studio": "pnpm --filter @ai-agent/api prisma:studio"
+  },
+  "devDependencies": {
+    "prettier": "^3.4.2",
+    "turbo": "^2.10.0"
+  }
+}
