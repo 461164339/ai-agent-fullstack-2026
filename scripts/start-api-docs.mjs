@@ -11,18 +11,13 @@ if (await isReachable(docsUrl)) {
   process.exit(0);
 }
 
-const pnpmCommand = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
-await runCommand(pnpmCommand, ['--filter', '@ai-agent/shared', 'build']);
+await runPnpm(['--filter', '@ai-agent/shared', 'build']);
 
-const api = spawn(
-  pnpmCommand,
-  ['--filter', '@ai-agent/api', 'start:dev'],
-  {
-    cwd: projectRoot,
-    env: process.env,
-    stdio: 'inherit',
-  },
-);
+const api = spawnProcess('pnpm', ['--filter', '@ai-agent/api', 'start:dev'], {
+  cwd: projectRoot,
+  env: process.env,
+  stdio: 'inherit',
+});
 
 api.on('exit', (code, signal) => {
   if (signal) {
@@ -75,7 +70,7 @@ async function isReachable(url) {
 
 function openChrome(url) {
   const opener = getChromeOpener(url);
-  const child = spawn(opener.command, opener.args, {
+  const child = spawnProcess(opener.command, opener.args, {
     detached: true,
     stdio: 'ignore',
   });
@@ -83,9 +78,9 @@ function openChrome(url) {
   child.unref();
 }
 
-function runCommand(command, args) {
+function runPnpm(args) {
   return new Promise((resolve, reject) => {
-    const child = spawn(command, args, {
+    const child = spawnProcess('pnpm', args, {
       cwd: projectRoot,
       env: process.env,
       stdio: 'inherit',
@@ -98,16 +93,29 @@ function runCommand(command, args) {
         return;
       }
 
-      reject(new Error(`${command} ${args.join(' ')} exited with ${code}`));
+      reject(new Error(`pnpm ${args.join(' ')} exited with ${code}`));
     });
   });
+}
+
+function spawnProcess(command, args, options = {}) {
+  if (process.platform !== 'win32') {
+    return spawn(command, args, options);
+  }
+
+  return spawn(process.env.ComSpec ?? 'cmd.exe', [
+    '/d',
+    '/s',
+    '/c',
+    [command, ...args].join(' '),
+  ], options);
 }
 
 function getChromeOpener(url) {
   if (process.platform === 'win32') {
     return {
-      command: 'cmd',
-      args: ['/c', 'start', '""', 'chrome', url],
+      command: 'start',
+      args: ['""', 'chrome', url],
     };
   }
 
