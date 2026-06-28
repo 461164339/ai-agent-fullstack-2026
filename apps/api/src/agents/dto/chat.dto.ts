@@ -2,17 +2,25 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   ArrayMaxSize,
+  IsArray,
   IsInt,
   IsIn,
   IsNumber,
   IsOptional,
   IsString,
+  IsUUID,
   Max,
   MaxLength,
   Min,
   MinLength,
   ValidateNested,
 } from 'class-validator';
+
+export const MAX_CHAT_ATTACHMENTS = 6;
+export const MAX_CHAT_ATTACHMENT_SIZE = 4 * 1024 * 1024;
+export const MAX_CHAT_ATTACHMENT_TEXT_LENGTH = 200_000;
+export const MAX_CHAT_ATTACHMENT_DATA_URL_LENGTH = 6_000_000;
+export const MAX_CHAT_MESSAGE_LENGTH = 20_000;
 
 export class ChatAttachmentDto {
   @ApiProperty({
@@ -40,9 +48,10 @@ export class ChatAttachmentDto {
   @ApiProperty({
     example: 1024,
   })
+  @Type(() => Number)
   @IsNumber()
   @Min(0)
-  @Max(4 * 1024 * 1024)
+  @Max(MAX_CHAT_ATTACHMENT_SIZE)
   size!: number;
 
   @ApiPropertyOptional({
@@ -51,7 +60,7 @@ export class ChatAttachmentDto {
   })
   @IsOptional()
   @IsString()
-  @MaxLength(200_000)
+  @MaxLength(MAX_CHAT_ATTACHMENT_TEXT_LENGTH)
   content?: string;
 
   @ApiPropertyOptional({
@@ -59,24 +68,27 @@ export class ChatAttachmentDto {
   })
   @IsOptional()
   @IsString()
-  @MaxLength(6_000_000)
+  @MaxLength(MAX_CHAT_ATTACHMENT_DATA_URL_LENGTH)
   dataUrl?: string;
 }
 
-export class ChatDto {
+export class ChatRequestDto {
   @ApiPropertyOptional({
     description: 'Existing chat session id. Omit to create a new session.',
+    format: 'uuid',
+  })
+  @IsOptional()
+  @IsUUID()
+  sessionId?: string;
+
+  @ApiPropertyOptional({
+    example: 'Explain how to split the RAG module in a NestJS project.',
   })
   @IsOptional()
   @IsString()
-  sessionId?: string;
-
-  @ApiProperty({
-    example: 'Explain how to split the RAG module in a NestJS project.',
-  })
-  @IsString()
   @MinLength(1)
-  message!: string;
+  @MaxLength(MAX_CHAT_MESSAGE_LENGTH)
+  message?: string;
 
   @ApiPropertyOptional({
     minimum: 1,
@@ -84,6 +96,7 @@ export class ChatDto {
     example: 5,
   })
   @IsOptional()
+  @Type(() => Number)
   @IsInt()
   @Min(1)
   @Max(20)
@@ -93,8 +106,16 @@ export class ChatDto {
     type: [ChatAttachmentDto],
   })
   @IsOptional()
+  @IsArray()
   @ValidateNested({ each: true })
   @Type(() => ChatAttachmentDto)
-  @ArrayMaxSize(6)
+  @ArrayMaxSize(MAX_CHAT_ATTACHMENTS)
   attachments?: ChatAttachmentDto[];
 }
+
+export type ChatDto = {
+  sessionId?: string;
+  message: string;
+  topK?: number;
+  attachments?: ChatAttachmentDto[];
+};

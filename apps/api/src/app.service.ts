@@ -16,7 +16,7 @@ export class AppService {
         'Next.js',
         'SSE',
       ],
-      docs: '/docs',
+      docs: '/api/docs',
       health: '/api/health',
       examples: {
         addKnowledge: {

@@ -12,6 +12,7 @@
     "test": "turbo test",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,css}\"",
     "api:dev": "pnpm --filter @ai-agent/api start:dev",
+    "api:docs": "node scripts/start-api-docs.mjs",
     "api:build": "pnpm --filter @ai-agent/api build",
     "api:test": "pnpm --filter @ai-agent/api test",
     "web:dev": "pnpm --filter @ai-agent/web dev",

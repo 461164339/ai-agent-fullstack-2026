@@ -29,6 +29,14 @@ import ReactMarkdown, { type Components } from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
+import {
+  API_BASE_URL,
+  MAX_ATTACHMENTS,
+  MAX_FILE_SIZE,
+  MAX_TEXT_CHARS,
+  STARTER_PROMPTS,
+  TEXT_EXTENSIONS,
+} from '@/config/chat';
 import { readSseStream } from '@/lib/sse';
 
 type Source = {
@@ -104,35 +112,6 @@ type ApiErrorBody = {
 type MarkdownCodeProps = ComponentProps<'code'> & {
   node?: unknown;
 };
-
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:3000/api';
-const MAX_ATTACHMENTS = 6;
-const MAX_FILE_SIZE = 4 * 1024 * 1024;
-const MAX_TEXT_CHARS = 200_000;
-const TEXT_EXTENSIONS = new Set([
-  'csv',
-  'css',
-  'html',
-  'js',
-  'jsx',
-  'json',
-  'log',
-  'md',
-  'sql',
-  'ts',
-  'tsx',
-  'txt',
-  'xml',
-  'yaml',
-  'yml',
-]);
-
-const starterPrompts = [
-  '帮我解释一下这个项目的 RAG 模块怎么拆分。',
-  '结合知识库总结 NestJS agent 的执行链路。',
-  '给我一个前后端联调 SSE 的排查清单。',
-];
 
 const languageAliases: Record<string, string> = {
   js: 'javascript',
@@ -441,7 +420,7 @@ export function ChatExperience() {
             </div>
             <h1>{title}</h1>
             <div className="starter-grid">
-              {starterPrompts.map((prompt) => (
+              {STARTER_PROMPTS.map((prompt) => (
                 <button
                   key={prompt}
                   className="starter"

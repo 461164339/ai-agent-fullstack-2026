@@ -45,14 +45,23 @@ async function bootstrap() {
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('AI Agent NestJS')
-    .setDescription('Local-first RAG and LangGraph agent learning API')
+    .setDescription(
+      'Local-first RAG, multimodal attachments, SSE streaming, and LangGraph agent API.',
+    )
     .setVersion('0.1.0')
+    .addServer('/api', 'API global prefix')
     .addTag('rag')
     .addTag('agents')
+    .addTag('health')
     .build();
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('docs', app, document);
+  SwaggerModule.setup('api/docs', app, document, {
+    customSiteTitle: 'AI Agent API Docs',
+    swaggerOptions: {
+      persistAuthorization: true,
+    },
+  });
 
   await app.listen(port);
 }
