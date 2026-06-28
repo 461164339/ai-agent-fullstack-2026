@@ -11,6 +11,18 @@ jobs:
     name: Lint, test, and build
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      NODE_ENV: test
+      PORT: 3000
+      DATABASE_URL: postgresql://ai_agent:ai_agent@localhost:5433/ai_agent?schema=public
+      OLLAMA_BASE_URL: http://127.0.0.1:11434
+      OLLAMA_CHAT_MODEL: llama3.1:8b
+      OLLAMA_VISION_MODEL: qwen2.5vl:3b
+      OLLAMA_EMBEDDING_MODEL: nomic-embed-text
+      EMBEDDING_DIMENSION: 768
+      RAG_CHUNK_SIZE: 900
+      RAG_CHUNK_OVERLAP: 120
+      RAG_DEFAULT_TOP_K: 5
 
     steps:
       - name: Checkout
